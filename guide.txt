@@ -1,0 +1,83 @@
+#Configuring a Load Balancer with HAProxy on Ubuntu
+
+Step 1: Installing HAProxy
+
+sudo apt update
+sudo apt install haproxy
+
+Step 2: Configuring HAProxy
+Edit the HAProxy configuration file located at /etc/haproxy/haproxy.cfg 
+sudo nano /etc/haproxy/haproxy.cfg
+
+Below is a basic configuration snippet for setting up HTTP load balancing
+
+haproxy.cfg
+------------------------------------------------------------
+frontend main_frontend
+    bind *:8080
+    acl is_app1 path_beg /app1
+    acl is_app2 path_beg /app2
+    use_backend app1_backend if is_app1
+    use_backend app2_backend if is_app2
+
+backend app1_backend
+    balance roundrobin
+    server backend1 10.10.10.6:80 check
+    server backend2 10.10.10.7:80 check
+
+backend app2_backend
+    balance roundrobin
+    server backend1 10.10.10.6:85 check
+    server backend2 10.10.10.7:85 check
+---------------------------------------------------------------
+
+roundrobin - this is the LB Algorithm
+
+Step 3: Starting and Enabling HAProxy
+
+After configuring, start the HAProxy service and enable it to run on boot:
+
+sudo systemctl start haproxy
+sudo systemctl enable haproxy
+
+Step 4: Verifying the Setup
+sudo systemctl status haproxy
+
+
+=============================================================
+
+
+HAProxy Loadbalacing Algorithms
+
+Round Robin (default):
+Example: balance roundrobin
+Description: Requests are distributed evenly across all backend servers in a circular manner.
+Useful when all backend servers have similar capabilities and there are no significant differences in their response times or loads.
+
+Least Connections:
+Example: balance leastconn
+Description: Requests are sent to the server with the fewest active connections at the moment.
+Useful when backend servers have different capacities and capabilities or when you want to optimize resource usage.
+
+Source IP Hash:
+Example: balance source
+Description: The hash of the source IP address is used to determine which server receives the request. 
+Requests from the same IP address are always directed to the same server. Useful when you need session persistence or sticky sessions for specific clients.
+
+Least Time:
+Example: balance leastconn
+Description: Similar to least connections, but takes into account server response times. 
+Requests are sent to the server with the least average response time. Useful when you want to minimize response times for clients.
+
+Random:
+Example: balance random
+Description: Requests are distributed randomly among backend servers. 
+Useful when you want a simple load balancing mechanism and the backend servers have similar capabilities.
+
+URI Hash:
+Example: balance uri
+Description: The hash of the request URI is used to determine which server receives the request. 
+Requests with the same URI are always directed to the same server. Useful when you need session persistence based on the request URI.
+
+
+
